@@ -1,0 +1,10 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  /* Use Tailwind's theme() function to reference our new config colors */
+  background-color: theme('colors.light-bg');
+  color: theme('colors.dark-text');
+}

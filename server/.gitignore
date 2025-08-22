@@ -1,0 +1,10 @@
+# server/.gitignore
+
+# Dependencies
+/node_modules
+
+# Environment Variables
+.env
+
+# Optional: VS Code folder
+.vscode/

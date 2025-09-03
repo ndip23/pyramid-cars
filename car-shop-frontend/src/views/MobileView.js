@@ -3,95 +3,92 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/axiosConfig.js';
 import { Link } from 'react-router-dom';
+import Hero from '../components/Hero.js'; // We will reuse the responsive Hero
+import FeaturesBanner from '../components/FeaturesBanner.js'; // We will reuse the responsive Banner
 import CarCard from '../components/CarCard.js';
-import ProductCard from '../components/ProductCard.js';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 
-// A simple Hero component specifically for the mobile view
-const MobileHero = () => (
-    <motion.div 
-        className="bg-dark-card p-6 rounded-lg text-center"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
+// This AnimatedSection component is also fully responsive
+const AnimatedSection = ({ children, className }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  return (
+    <motion.section
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8 }}
+      // Use responsive padding for different screen sizes
+      className={`container mx-auto px-4 py-12 md:py-20 ${className || ''}`}
     >
-        <h1 className="text-3xl font-black text-light-text uppercase">
-            Your Trusted Car Companion
-        </h1>
-        <p className="mt-2 mb-4 text-secondary-text">
-            Find quality cars and genuine spare parts, right here in Cameroon.
-        </p>
-        <Link to="/cars">
-            <button className="w-full bg-primary-red font-bold py-3 rounded-lg uppercase">
-                Browse All Cars
-            </button>
-        </Link>
-    </motion.div>
-);
+      {children}
+    </motion.section>
+  );
+};
 
 const MobileView = () => {
-    const [cars, setCars] = useState([]);
-    const [parts, setParts] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchMobileData = async () => {
-            try {
-                // Fetch 2 cars and 2 parts for a concise mobile view
-                const carsPromise = api.get('/api/cars?limit=2');
-                const partsPromise = api.get('/api/products?limit=2');
-                const [carsResponse, partsResponse] = await Promise.all([carsPromise, partsPromise]);
-                
-                setCars(carsResponse.data.cars);
-                setParts(partsResponse.data);
-            } catch (err) {
-                console.error("Failed to fetch mobile homepage data:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchMobileData();
-    }, []);
+  useEffect(() => {
+    const fetchHomepageData = async () => {
+      try {
+        // Fetch 3 cars, just like the desktop view
+        const { data } = await api.get('/api/cars?limit=3');
+        setCars(data.cars);
+      } catch (err) {
+        console.error("Failed to fetch homepage data for mobile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHomepageData();
+  }, []);
+  
+  return (
+    <>
+      {/* --- Section 1: Hero --- */}
+      {/* Our existing Hero component is already responsive and will adapt perfectly. */}
+      <Hero />
 
-    return (
-        <div className="p-4 space-y-12">
-            <MobileHero />
-
-            {/* --- Featured Cars Section --- */}
-            <section>
-                <h2 className="text-2xl font-bold mb-4">Featured Cars</h2>
-                {loading ? (
-                    <p className="text-secondary-text">Loading cars...</p>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6">
-                        {cars.map(car => <CarCard key={car._id} car={car} />)}
-                    </div>
-                )}
-                 <div className="text-center mt-6">
-                    <Link to="/cars" className="text-primary-red font-semibold">
-                        View All Cars &rarr;
-                    </Link>
-                </div>
-            </section>
-
-            {/* --- Featured Spare Parts Section --- */}
-            <section>
-                <h2 className="text-2xl font-bold mb-4">Top Spare Parts</h2>
-                 {loading ? (
-                    <p className="text-secondary-text">Loading parts...</p>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6">
-                        {parts.map(part => <ProductCard key={part._id} product={part} />)}
-                    </div>
-                )}
-                <div className="text-center mt-6">
-                    <Link to="/parts" className="text-primary-red font-semibold">
-                        View All Parts &rarr;
-                    </Link>
-                </div>
-            </section>
+      {/* --- Section 2: Features Banner --- */}
+      {/* Our existing FeaturesBanner is also responsive. */}
+      <FeaturesBanner />
+      
+      {/* --- Section 3: Featured Cars --- */}
+      {/* This section is identical to the one in DesktopView. */}
+      <AnimatedSection>
+        <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Featured <span className="text-primary-red">Cars for Sale</span>
+            </h2>
+            <p className="text-secondary-text max-w-2xl mx-auto mb-12">
+                Check out our hand-picked selection of quality pre-owned vehicles.
+            </p>
         </div>
-    );
+        
+        {loading ? (
+            <p className="text-center text-xl text-secondary-text">Loading Cars...</p>
+        ) : (
+            cars && cars.length > 0 ? (
+                 // On mobile, this grid will automatically be a single column.
+                 // On tablets (md) it becomes 2 columns, on large screens (lg) 3 columns.
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     {cars.map(car => <CarCard key={car._id} car={car} />)}
+                </div>
+            ) : (
+                <p className="text-center text-secondary-text">No featured cars available at the moment.</p>
+            )
+        )}
+        <div className="text-center mt-12">
+            <Link to="/cars" className="bg-dark-card text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
+                View All Cars
+            </Link>
+        </div>
+      </AnimatedSection>
+    </>
+  );
 };
 
 export default MobileView;

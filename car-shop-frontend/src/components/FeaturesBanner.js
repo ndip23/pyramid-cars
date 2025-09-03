@@ -1,12 +1,12 @@
 // src/components/FeaturesBanner.jsx
 
-import { FaCog, FaShippingFast, FaHeadset } from 'react-icons/fa';
+import { FaCar, FaShippingFast, FaHeadset } from 'react-icons/fa';
 
 const features = [
   {
-    icon: <FaCog className="text-primary-red text-4xl" />,
-    title: 'Genuine Spare Parts',
-    description: 'Quality parts you can trust for your car.',
+    icon: <FaCar className="text-primary-red text-4xl" />,
+    title: 'Genuine car',
+    description: 'Quality Inspected Vehicles with a warranty.',
   },
   {
     icon: <FaShippingFast className="text-primary-red text-4xl" />,

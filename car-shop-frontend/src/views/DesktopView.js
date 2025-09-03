@@ -5,7 +5,8 @@ import api from '../utils/axiosConfig.js';
 import { Link } from 'react-router-dom';
 import Hero from '../components/Hero.js';
 import FeaturesBanner from '../components/FeaturesBanner.js';
-import ProductCard from '../components/ProductCard.js';
+// ProductCard is no longer needed on the homepage
+// import ProductCard from '../components/ProductCard.jsx';
 import CarCard from '../components/CarCard.js';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
@@ -22,22 +23,20 @@ const AnimatedSection = ({ children, className }) => {
 
 const DesktopView = () => {
   const [cars, setCars] = useState([]);
-  const [parts, setParts] = useState([]);
+  // const [parts, setParts] = useState([]); // <-- Commented out
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomepageData = async () => {
       try {
-        const carsPromise = api.get('/api/cars?limit=3');
-        const partsPromise = api.get('/api/products?limit=4');
-        const [carsResponse, partsResponse] = await Promise.all([carsPromise, partsPromise]);
-        
-        // --- THIS IS THE FIX ---
-        // We need to access the 'cars' property within the response data.
-        setCars(carsResponse.data.cars); 
-        
-        // The products endpoint returns a direct array, so this is correct.
-        setParts(partsResponse.data);
+        // Now we only fetch cars for the homepage
+        const carsResponse = await api.get('/api/cars?limit=3');
+        setCars(carsResponse.data.cars);
+
+        // --- The parts fetch is now commented out ---
+        // const partsPromise = api.get('/api/products?limit=4');
+        // const [carsResponse, partsResponse] = await Promise.all([carsPromise, partsPromise]);
+        // setParts(partsResponse.data);
 
       } catch (err) {
         console.error("Failed to fetch homepage data:", err);
@@ -65,20 +64,24 @@ const DesktopView = () => {
         </div>
         
         {loading ? <p className="text-center">Loading Cars...</p> : (
-            cars && cars.length > 0 ? ( // Added a check to ensure cars is not null/undefined
+            cars && cars.length > 0 ? (
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                      {cars.map(car => <CarCard key={car._id} car={car} />)}
                 </div>
             ) : <p className="text-center text-secondary-text">No featured cars available at the moment.</p>
         )}
         <div className="text-center mt-12">
-            <Link to="/cars" className="bg-black text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
+            <Link to="/cars" className="bg-dark-card text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
                 View All Cars
             </Link>
         </div>
       </AnimatedSection>
       
-      {/* --- FEATURED SPARE PARTS SECTION --- */}
+      {/* 
+        ======================================================
+        --- FEATURED SPARE PARTS SECTION (COMMENTED OUT) ---
+        ======================================================
+      
       <AnimatedSection>
         <div className="text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -98,11 +101,13 @@ const DesktopView = () => {
         )}
 
         <div className="text-center mt-12">
-            <Link to="/parts" className="bg-black text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
+            <Link to="/parts" className="bg-dark-card text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
                 View All Parts
             </Link>
         </div>
       </AnimatedSection>
+
+      */}
     </>
   );
 };

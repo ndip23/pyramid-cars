@@ -44,7 +44,7 @@ const ContactPage = () => {
                         <FaMapMarkerAlt className="text-primary-red text-3xl mt-1" />
                         <div>
                             <h3 className="text-2xl font-bold">Our Address</h3>
-                            <p className="text-secondary-text">123 Auto Parts Lane, Car City, 12345</p>
+                            <p className="text-secondary-text">GODWIN, Bonaberi, Douala</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -52,7 +52,7 @@ const ContactPage = () => {
                         <div>
                             <h3 className="text-2xl font-bold">Phone</h3>
                             <a href="https://wa.me/237679323583" target="_blank" rel="noopener noreferrer" className="text-secondary-text hover:text-primary-red transition-colors">
-                                +237 679 323 584
+                                +23767923583
                             </a>
                         </div>
                     </div>

@@ -52,7 +52,7 @@ const Footer = () => {
               Pyramid<span className="text-primary-red">Cars</span>
             </h1>
             <p className="text-secondary-text mb-6">
-              Your trusted partner for high-quality auto parts and vehicles. We are committed to your satisfaction.
+              Your trusted partner for high-quality vehicles. We are committed to your satisfaction.
             </p>
             <div className="flex space-x-5 text-2xl">
               <SocialIcon icon={<FaFacebookF />} href="#" />

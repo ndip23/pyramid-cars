@@ -55,7 +55,7 @@ const Layout = () => {
             <Route path="/cars" element={<PublicCarListPage />} />
             <Route path="/cars/:id" element={<CarDetailPage />} />
 
-            <Route path="/parts" element={<PartsListPage />} />
+           {/*  <Route path="/parts" element={<PartsListPage />} /> */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />

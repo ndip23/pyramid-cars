@@ -2,7 +2,7 @@
 
 const Product = require('../models/Product.js');
 const User = require('../models/User.js');
-
+const Car = require('../models/Car.js');
 const getAllProducts = async (req, res) => {
     try {
         let query = Product.find({});
@@ -71,16 +71,19 @@ const getDashboardStats = async (req, res) => {
     try {
         const productCount = await Product.countDocuments();
         const userCount = await User.countDocuments();
+        const carCount = await Car.countDocuments();
         // In the future, you could add:
         // const orderCount = await Order.countDocuments();
         // const totalSales = await Order.aggregate([...]);
         
         const recentProducts = await Product.find().sort({ createdAt: -1 }).limit(5);
-
+        const recentCars = await Car.find().sort({ createdAt: -1 }).limit(5); 
         res.status(200).json({
             productCount,
             userCount,
-            recentProducts
+            recentProducts,
+            carCount, 
+            recentCars
         });
     } catch (error) {
         res.status(500).json({ message: "Could not fetch dashboard stats", error });

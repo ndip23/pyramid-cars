@@ -82,7 +82,7 @@ const MobileView = () => {
             )
         )}
         <div className="text-center mt-12">
-            <Link to="/cars" className="bg-dark-card text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
+            <Link to="/cars" className="bg-black text-white font-bold py-3 px-10 rounded-lg text-lg uppercase hover:bg-gray-700 transition-colors">
                 View All Cars
             </Link>
         </div>

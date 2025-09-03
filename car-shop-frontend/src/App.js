@@ -33,6 +33,8 @@ import AdminHome from './pages/admin/AdminHome.js';
 import ProductListPage from './pages/admin/ProductListPage.js';
 import ProductCreatePage from './pages/admin/ProductCreatePage.js';
 import ProductEditPage from './pages/admin/ProductEditPage.js';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage.js'; 
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage.js'; 
 // Admin-facing page for managing cars
 import AdminCarListPage from './pages/admin/CarListPage.js'; 
 
@@ -61,6 +63,8 @@ const Layout = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsAndConditionsPage />} />
             
             {/* ====================================================== */}
             {/*                USER PROTECTED ROUTES                   */}

@@ -1,126 +1,100 @@
-// src/pages/admin/CarListPage.jsx
-
+// src/pages/CarListPage.jsx
 import { useState, useEffect } from 'react';
-import api from '../../utils/axiosConfig.jsx';
-import { useCart } from '../../context/CartContext.jsx';
-import toast from 'react-hot-toast';
-import { FaTrashAlt } from 'react-icons/fa';
+import api from '../utils/axiosConfig.js';
+import CarCard from '../components/CarCard.js';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const CarListPage = () => {
     const [cars, setCars] = useState([]);
+    const [makes, setMakes] = useState([]); // To populate the 'make' dropdown
     const [loading, setLoading] = useState(true);
-    const [formData, setFormData] = useState({ 
-        make: '', model: '', year: '', price: '', mileage: '', 
-        transmission: 'Automatic', fuelType: '', description: '', image: '' 
+    
+    // --- State for our filters ---
+    const [filters, setFilters] = useState({
+        keyword: '',
+        make: '',
+        transmission: '',
+        minPrice: '',
+        maxPrice: ''
     });
-    const [uploading, setUploading] = useState(false);
-    const { token } = useCart();
 
-    const fetchCars = async () => {
-        setLoading(true);
-        try {
-            const { data } = await api.get('/api/cars');
+    const navigate = useNavigate();
+    const location = useLocation();
 
-            // --- THIS IS THE FIX ---
-            // We need to access the 'cars' array inside the response data object.
-            if (data && Array.isArray(data.cars)) {
-                setCars(data.cars);
-            } else {
-                setCars([]); // Set to empty array if the format is wrong
-            }
+    // This effect will run whenever the filters change
+    useEffect(() => {
+        // Construct the query string from the filters state
+        const params = new URLSearchParams();
+        if (filters.keyword) params.append('keyword', filters.keyword);
+        if (filters.make) params.append('make', filters.make);
+        if (filters.transmission) params.append('transmission', filters.transmission);
+        if (filters.minPrice) params.append('minPrice', filters.minPrice);
+        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
 
-        } catch (error) {
-            toast.error("Could not fetch the car list.");
-            console.error("Fetch cars error:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        // Update the URL in the browser (good for sharing links)
+        navigate(`${location.pathname}?${params.toString()}`);
 
-    useEffect(() => { 
-        fetchCars(); 
-    }, []);
-
-    const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    const uploadFileHandler = async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const uploadFormData = new FormData();
-        uploadFormData.append('image', file);
-        setUploading(true);
-        try {
-            const config = { headers: { 'Content-Type': 'multipart/form-data' } };
-            const { data } = await api.post('/api/upload', uploadFormData, config);
-            setFormData({ ...formData, image: data.image });
-            toast.success('Image uploaded successfully');
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Image upload failed');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleSubmit = async e => {
-        e.preventDefault();
-        if (!formData.image) {
-            return toast.error("Please upload an image for the car.");
-        }
-        try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            await api.post('/api/cars', formData, config);
-            toast.success("Car listed for sale successfully!");
-            fetchCars(); // Refresh the list
-            setFormData({ make: '', model: '', year: '', price: '', mileage: '', transmission: 'Automatic', fuelType: '', description: '', image: '' });
-            document.getElementById('image-file').value = '';
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to list car.");
-        }
-    };
-
-    const deleteHandler = async (id, title) => {
-        if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
+        const fetchCars = async () => {
+            setLoading(true);
             try {
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                await api.delete(`/api/cars/${id}`, config);
-                toast.success("Car listing deleted.");
-                fetchCars();
-            } catch (error) {
-                toast.error("Failed to delete car listing.");
-            }
-        }
+                const { data } = await api.get(`/api/cars?${params.toString()}`);
+                setCars(data.cars);
+                setMakes(data.makes); // Get the list of makes for the dropdown
+            } catch (err) { console.error(err); } 
+            finally { setLoading(false); }
+        };
+        fetchCars();
+    }, [filters, navigate, location.pathname]);
+
+    const handleFilterChange = (e) => {
+        setFilters({ ...filters, [e.target.name]: e.target.value });
+    };
+
+    const clearFilters = () => {
+        setFilters({ keyword: '', make: '', transmission: '', minPrice: '', maxPrice: '' });
     };
 
     return (
-        <div className="p-4 md:p-8 grid lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-2">
-                <h1 className="text-3xl font-bold mb-6 text-gray-800">List a New Car for Sale</h1>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* ... Your form JSX is correct and does not need changes ... */}
-                </form>
-            </div>
+        <div className="container mx-auto px-4 py-16">
+            <h1 className="text-4xl font-black text-center mb-6">Cars For Sale</h1>
             
-            <div className="lg:col-span-3">
-                <h2 className="text-2xl font-bold mb-6 text-gray-800">Current Car Listings</h2>
-                {loading ? <p>Loading listings...</p> : (
-                    <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-2">
-                        {cars.length > 0 ? cars.map(car => (
-                            <div key={car._id} className="bg-white shadow p-3 rounded-lg flex items-center justify-between gap-4">
-                                <img src={car.image.startsWith('http') ? car.image : `${process.env.REACT_APP_API_BASE_URL}${car.image}`} alt={`${car.make} ${car.model}`} className="w-20 h-20 object-cover rounded-md"/>
-                                <div className="flex-grow">
-                                    <p className="font-semibold text-gray-800">{car.year} {car.make} {car.model}</p>
-                                    <p className="text-sm text-gray-500">{car.price.toLocaleString('fr-FR')} FCFA</p>
-                                </div>
-                                <button onClick={() => deleteHandler(car._id, `${car.year} ${car.make} ${car.model}`)} className="text-primary-red hover:text-red-400 text-xl transition-colors p-2">
-                                    <FaTrashAlt/>
-                                </button>
-                            </div>
-                        )) : <p className="text-gray-500">No cars listed yet. Add one using the form.</p>}
-                    </div>
-                )}
+            {/* --- FILTER AND SEARCH UI --- */}
+            <div className="bg-dark-card p-4 rounded-lg mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                {/* Search by Keyword */}
+                <input type="text" name="keyword" placeholder="Search Make/Model..." value={filters.keyword} onChange={handleFilterChange} className="lg:col-span-2 w-full px-4 py-2 bg-dark-bg border border-gray-700 rounded-md"/>
+                
+                {/* Filter by Make */}
+                <select name="make" value={filters.make} onChange={handleFilterChange} className="w-full px-4 py-2 bg-dark-bg border border-gray-700 rounded-md">
+                    <option value="">All Makes</option>
+                    {makes.map(make => <option key={make} value={make}>{make}</option>)}
+                </select>
+
+                {/* Filter by Transmission */}
+                <select name="transmission" value={filters.transmission} onChange={handleFilterChange} className="w-full px-4 py-2 bg-dark-bg border border-gray-700 rounded-md">
+                    <option value="">All Transmissions</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                </select>
+
+                {/* Price Range (Simplified) */}
+                <input type="number" name="minPrice" placeholder="Min Price (FCFA)" value={filters.minPrice} onChange={handleFilterChange} className="w-full px-4 py-2 bg-dark-bg border border-gray-700 rounded-md"/>
+
+                {/* Clear Button */}
+                <button onClick={clearFilters} className="bg-secondary-text text-white font-bold py-2 px-4 rounded-md">Clear</button>
             </div>
+
+            {loading ? (
+                <p className="text-center text-2xl py-20">Searching for Cars...</p>
+            ) : (
+                cars.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {cars.map(car => <CarCard key={car._id} car={car} />)}
+                    </div>
+                ) : (
+                    <p className="text-center text-2xl py-20 text-secondary-text">No cars found matching your criteria.</p>
+                )
+            )}
         </div>
     );
 };
-
 export default CarListPage;

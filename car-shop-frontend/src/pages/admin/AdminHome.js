@@ -1,8 +1,8 @@
 // src/pages/admin/AdminHome.jsx
 
 import { useState, useEffect } from 'react';
-import api from '../../utils/axiosConfig.jsx';
-import { useCart } from '../../context/CartContext.jsx';
+import api from '../../utils/axiosConfig.js';
+import { useCart } from '../../context/CartContext.js';
 import { Link } from 'react-router-dom';
 import { FaBoxOpen, FaUsers, FaPlus, FaCar } from 'react-icons/fa'; // Added FaCar
 import toast from 'react-hot-toast';

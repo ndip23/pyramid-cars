@@ -1,7 +1,7 @@
 // server/routes/carRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getAllCars, createCar, deleteCar, getCarById } = require('../controllers/carController.js');
+const { getAllCars, createCar, deleteCar, getCarById, updateCar } = require('../controllers/carController.js');
 const { protect, admin } = require('../middleware/authMiddleware.js');
 
 // --- PUBLIC ROUTE ---
@@ -14,5 +14,7 @@ router.get('/:id', getCarById);
 router.post('/', protect, admin, createCar);
 // DELETE /api/cars/:id
 router.delete('/:id', protect, admin, deleteCar);
+// PUT /api/cars/:id
+router.put('/:id', protect, admin, updateCar);
 
 module.exports = router;

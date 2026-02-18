@@ -20,7 +20,6 @@ import LoginPage from './pages/LoginPage.js';
 import DashboardPage from './pages/DashboardPage.js';
 import AboutPage from './pages/AboutPage.js';
 import ContactPage from './pages/ContactPage.js';
-import PartsListPage from './pages/PartsListPage.js';
 
 // --- FIX #1: Correct and Unambiguous Imports ---
 // Public-facing pages for cars

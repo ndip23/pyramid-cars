@@ -3,77 +3,69 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// Import data and models
-const products = require('./data/products.js');
-const Product = require('./models/Product.js');
-const User = require('./models/User.js'); // Make sure to import the User model
+// Import models
+const User = require('./models/User.js'); 
 const connectDB = require('./config/db.js');
 
 // Load environment variables from .env file
 dotenv.config();
 
-// Connect to the database to perform operations
+// Connect to the database
 connectDB();
 
-/**
- * Imports seed data into the database.
- * It first destroys all existing data in the User and Product collections,
- * then creates the admin user and inserts the product data.
- */
-const importData = async () => {
+const updateAdminCredentials = async () => {
     try {
-        // --- 1. Clear existing data ---
-        // This ensures we don't create duplicate data on re-runs.
-        await Product.deleteMany();
-        await User.deleteMany(); // WARNING: This will delete ALL users. Use with caution.
-        
-        console.log('✅ Previous User and Product data destroyed.');
+        const newUsername = process.env.ADMIN_USERNAME;
+        const newEmail = process.env.ADMIN_EMAIL;
+        const newPassword = process.env.ADMIN_PASSWORD;
 
-        // --- 2. Create the Admin User from .env variables ---
-        const adminUser = await User.create({
-            username: process.env.ADMIN_USERNAME,
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD,
-            confirmPassword: process.env.ADMIN_PASSWORD, // Must be provided to pass validation
-            role: 'admin' // Explicitly set the role
-        });
+        if (!newEmail || !newPassword) {
+            throw new Error("❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env file");
+        }
 
-        console.log(`✅ Admin User '${adminUser.username}' created successfully.`);
+        console.log('🔄 Checking for existing Admin account...');
 
-        // --- 3. Insert product data ---
-        // Note: The sample products don't have a user associated with them, which is fine.
-        await Product.insertMany(products);
-        console.log(`✅ ${products.length} products have been imported.`);
-        
-        console.log('\nData import complete!');
+        // 1. Try to find an existing user with role 'admin'
+        let adminUser = await User.findOne({ role: 'admin' });
+
+        // 2. If no admin found by role, try finding by the email provided
+        if (!adminUser) {
+            adminUser = await User.findOne({ email: newEmail });
+        }
+
+        if (adminUser) {
+            // --- UPDATE EXISTING ADMIN ---
+            console.log(`found existing user: ${adminUser.email}`);
+            
+            adminUser.username = newUsername;
+            adminUser.email = newEmail;
+            
+            // FIX: Set BOTH password and confirmPassword to pass validation
+            adminUser.password = newPassword;
+            adminUser.confirmPassword = newPassword; 
+            
+            adminUser.role = 'admin'; 
+            
+            await adminUser.save();
+            console.log(`✅ Admin credentials updated successfully!`);
+        } else {
+            // --- CREATE NEW ADMIN ---
+            console.log('No admin found. Creating new one...');
+            await User.create({
+                username: newUsername,
+                email: newEmail,
+                password: newPassword,
+                confirmPassword: newPassword, // FIX: Added this line
+                role: 'admin'
+            });
+            console.log(`✅ New Admin User created successfully: ${newEmail}`);
+        }
+
         process.exit();
     } catch (error) {
-        console.error(`❌ Error with data import: ${error}`);
-        process.exit(1); // Exit with a failure code
+        console.error(`❌ Error updating admin: ${error.message}`);
+        process.exit(1); 
     }
 };
 
-/**
- * Destroys all data in the User and Product collections.
- */
-const destroyData = async () => {
-    try {
-        await Product.deleteMany();
-        await User.deleteMany();
-        
-        console.log('✅ All User and Product data has been destroyed.');
-        process.exit();
-    } catch (error)
-    {
-        console.error(`❌ Error with data destruction: ${error}`);
-        process.exit(1);
-    }
-};
-
-// --- Command Line Logic ---
-// This allows you to run `node seeder` to import or `node seeder -d` to destroy.
-if (process.argv[2] === '-d') {
-    destroyData();
-} else {
-    importData();
-}
+updateAdminCredentials();

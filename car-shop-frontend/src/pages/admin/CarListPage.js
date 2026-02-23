@@ -11,9 +11,9 @@ const CarListPage = () => {
     const [loading, setLoading] = useState(true);
     const [editId, setEditId] = useState(null); 
     
-    // UPDATED STATE: Includes imageGallery array
+    // UPDATED STATE: Mileage removed from state (handled in background)
     const [formData, setFormData] = useState({ 
-        make: '', model: '', year: '', price: '', mileage: '', 
+        make: '', model: '', year: '', price: '', 
         transmission: 'Automatic', fuelType: '', description: '', 
         condition: 'Used',
         image: '',          // Main thumbnail
@@ -57,13 +57,13 @@ const CarListPage = () => {
             model: car.model,
             year: car.year,
             price: car.price,
-            mileage: car.mileage,
+            // Mileage is skipped here
             transmission: car.transmission,
             fuelType: car.fuelType,
             description: car.description,
             condition: car.condition || 'Used',
             image: car.image,
-            imageGallery: car.imageGallery || [] // Load existing gallery
+            imageGallery: car.imageGallery || [] 
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -71,13 +71,15 @@ const CarListPage = () => {
     const cancelEditHandler = () => {
         setEditId(null);
         setFormData({ 
-            make: '', model: '', year: '', price: '', mileage: '', 
+            make: '', model: '', year: '', price: '', 
             transmission: 'Automatic', fuelType: '', description: '', 
             condition: 'Used', image: '', imageGallery: [] 
         });
         // Reset file inputs
-        document.getElementById('main-image').value = '';
-        document.getElementById('gallery-images').value = '';
+        const mainInput = document.getElementById('main-image');
+        const galleryInput = document.getElementById('gallery-images');
+        if(mainInput) mainInput.value = '';
+        if(galleryInput) galleryInput.value = '';
     };
 
     // --- UPLOAD HANDLER (MAIN IMAGE) ---
@@ -135,7 +137,6 @@ const CarListPage = () => {
             toast.error('Gallery upload failed');
         } finally {
             setUploading(false);
-            // Clear input so you can select the same files again if needed
             e.target.value = null; 
         }
     };
@@ -152,16 +153,19 @@ const CarListPage = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         if (!formData.image) return toast.error("Main image is required.");
+        
+        // AUTOMATICALLY SET MILEAGE TO 0 (Database requires a number)
+        const dataToSend = { ...formData, mileage: 0 }; 
 
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             
             if (editId) {
-                await api.put(`/api/cars/${editId}`, formData, config);
+                await api.put(`/api/cars/${editId}`, dataToSend, config);
                 toast.success("Car updated successfully!");
                 cancelEditHandler(); 
             } else {
-                await api.post('/api/cars', formData, config);
+                await api.post('/api/cars', dataToSend, config);
                 toast.success("Car listed successfully!");
                 cancelEditHandler(); 
             }
@@ -205,32 +209,33 @@ const CarListPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Basic Info */}
+                        {/* Row 1: Make & Model */}
                         <div className="grid grid-cols-2 gap-3">
                             <input type="text" name="make" placeholder="Make" value={formData.make} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                             <input type="text" name="model" placeholder="Model" value={formData.model} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                         </div>
                         
+                        {/* Row 2: Year & Price */}
                         <div className="grid grid-cols-2 gap-3">
                             <input type="number" name="year" placeholder="Year" value={formData.year} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                             <input type="number" name="price" placeholder="Price (FCFA)" value={formData.price} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                         </div>
                         
+                        {/* Row 3: Condition & Transmission (Mileage Removed) */}
                         <div className="grid grid-cols-2 gap-3">
-                            <input type="number" name="mileage" placeholder="Mileage (km)" value={formData.mileage} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                             <select name="condition" value={formData.condition} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                                 <option value="Used">Used</option>
                                 <option value="New">Brand New</option>
                             </select>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
+
                             <select name="transmission" value={formData.transmission} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                                 <option value="Automatic">Automatic</option>
                                 <option value="Manual">Manual</option>
                             </select>
-                            <input type="text" name="fuelType" placeholder="Fuel Type" value={formData.fuelType} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                         </div>
+                        
+                        {/* Row 4: Fuel Type */}
+                        <input type="text" name="fuelType" placeholder="Fuel Type (e.g. Petrol)" value={formData.fuelType} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
                         
                         <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3"></textarea>
 
@@ -280,7 +285,7 @@ const CarListPage = () => {
                                 <input 
                                     type="file" 
                                     id="gallery-images"
-                                    multiple // Allows multiple selection
+                                    multiple 
                                     onChange={uploadGalleryHandler} 
                                     className="hidden" 
                                 />
@@ -288,7 +293,7 @@ const CarListPage = () => {
                             {uploading && <p className="text-blue-500 text-sm mt-1 animate-pulse">Uploading images...</p>}
                         </div>
 
-                        <button type="submit" className={`w-full text-white p-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95 ${editId ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                        <button type="submit" className={`w-full text-white p-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95 ${editId ? 'bg-red-500 hover:bg-red-600' : 'bg-red-600 hover:bg-red-700'}`}>
                             {editId ? 'Update Car' : 'List Car'}
                         </button>
                     </form>
@@ -307,7 +312,7 @@ const CarListPage = () => {
                 ) : (
                     <div className="space-y-4 lg:max-h-[85vh] lg:overflow-y-auto lg:pr-2">
                         {cars.length > 0 ? cars.map(car => (
-                            <div key={car._id} className={`bg-white shadow-sm p-4 rounded-xl border flex flex-col sm:flex-row gap-4 transition-all hover:shadow-md ${editId === car._id ? 'border-orange-500 ring-1 ring-orange-500 bg-orange-50' : 'border-gray-200'}`}>
+                            <div key={car._id} className={`bg-white shadow-sm p-4 rounded-xl border flex flex-col sm:flex-row gap-4 transition-all hover:shadow-md ${editId === car._id ? 'border-red-500 ring-1 ring-red-500 bg-red-50' : 'border-gray-200'}`}>
                                 
                                 <div className="w-full sm:w-32 h-48 sm:h-24 flex-shrink-0 relative">
                                     <img 
@@ -332,8 +337,6 @@ const CarListPage = () => {
                                             </span>
                                         </div>
                                         <div className="text-sm text-gray-500 mt-1 flex gap-3">
-                                            <span>{car.mileage} km</span>
-                                            <span>•</span>
                                             <span>{car.transmission}</span>
                                             <span>•</span>
                                             <span className={`${car.condition === 'New' ? 'text-green-600 font-bold' : ''}`}>{car.condition || 'Used'}</span>

@@ -28,15 +28,16 @@ app.use(helmet()); // Sets important security headers
 
 // --- CORS Configuration ---
 // This is critical for connecting your frontend to this backend in production.
-const corsOptions = {
-    // Replace 'YOUR_VERCEL_APP_URL.vercel.app' with your actual deployed frontend URL
+app.use(cors({
     origin: [
-        'http://localhost:3000', // For local development
-        'https://pyramid-cars.vercel.app' // Example Vercel URL
+        'http://localhost:3000',                // Local Development
+        'https://pyramid-cars.vercel.app',      // Default Vercel URL
+        'https://cpromark.site',                // NEW: Custom Domain
+        'https://www.cpromark.site'             // NEW: Custom Domain (www)
     ],
-    optionsSuccessStatus: 200 // For legacy browser support
-};
-app.use(cors(corsOptions));
+    credentials: true, // Allows cookies/headers to be sent securely
+    optionsSuccessStatus: 200
+}));
 
 app.use(express.json()); // Allows the server to accept and parse JSON in request bodies
 
